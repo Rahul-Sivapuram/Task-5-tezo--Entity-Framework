@@ -229,14 +229,14 @@ public static class Program
         employee.Uid = ReadValidInput("Enter Employee Number", s => string.IsNullOrEmpty(s) || Regex.IsMatch(s, @"^TZ\d{4}$"));
         employee.FirstName = ReadValidInput("First Name", s => !string.IsNullOrEmpty(s.Trim()));
         employee.LastName = ReadValidInput("Last Name", s => !string.IsNullOrEmpty(s.Trim()));
-        employee.Dob = DateOnly.FromDateTime(DateTime.Parse(ReadInput("Date Of Birth (y/m/d)")));
+        employee.Dob = DateOnly.Parse(ReadInput("Date Of Birth (y/m/d)"));
 
         employee.EmailId = ReadValidInput("Email ID", s => string.IsNullOrWhiteSpace(s) || Regex.IsMatch(s, @"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$"));
 
         long mobileNumber;
         bool isValidMobile = long.TryParse(ReadValidInput("Mobile Number (10 digits)", s => string.IsNullOrWhiteSpace(s) || (long.TryParse(s, out mobileNumber) && s.Length == 10)), out mobileNumber);
         employee.MobileNumber = isValidMobile ? mobileNumber : 0;
-        employee.JoiningDate = DateOnly.FromDateTime(DateTime.Parse(ReadInput("Joining Date (y/m/d)")));
+        employee.JoiningDate = DateOnly.Parse(ReadInput("Joining Date (y/m/d)"));
 
         PrintOptions(_dropDownBal.GetLocationOptions(),d => d.Name);
         employee.LocationId = _dropDownBal.GetLocationId(ReadInput("Location"));

@@ -26,7 +26,6 @@ public class EmployeeDal : IEmployeeDal
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
             return null;
         }
     }
@@ -41,6 +40,7 @@ public class EmployeeDal : IEmployeeDal
         }
         catch (Exception ex)
         {
+            Console.WriteLine(ex);
             return -1;
         }
     }
@@ -69,7 +69,6 @@ public class EmployeeDal : IEmployeeDal
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
             return -1;
         }
     }
@@ -82,7 +81,6 @@ public class EmployeeDal : IEmployeeDal
             var employee = _context.Employees.Find(employeeId);
             if (employee != null)
             {
-                Console.WriteLine("yes");
                 _context.Employees.Remove(employee);
                 rows = _context.SaveChanges();
             }
@@ -90,7 +88,6 @@ public class EmployeeDal : IEmployeeDal
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
             return -1;
         }
     }
