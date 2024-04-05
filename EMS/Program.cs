@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using EMS.Common;
 using EMS.BAL;
 using EMS.DAL;
+using EMS.DB;
 namespace EMS;
 using System.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -32,9 +33,7 @@ public static class Program
     private static IRoleBal _roleBal;
     private static IDropDownBal _dropDownBal;
     private static IDropDownDal _dropDownDal;
-    private static RoleDbContext _roleContext;
-    private static EmployeeDbContext _employeeContext;
-    private static DropDownDbContext _dropdownContext;
+    private static RahulContext _context;
     private static string connectionString;
 
     static Program()
@@ -42,13 +41,11 @@ public static class Program
         _configuration = GetConfiguration();
         _console = new ConsoleWriter();
         connectionString = _configuration["ConnectionString"];
-        _employeeContext = new EmployeeDbContext();
-        _employeeDal = new EmployeeDal(connectionString, _employeeContext);
-        _dropdownContext = new DropDownDbContext();
-        _dropDownDal = new DropDownDal(connectionString,_dropdownContext,_employeeContext);
+        _context = new RahulContext();
+        _employeeDal = new EmployeeDal(_context);
+        _dropDownDal = new DropDownDal(_context);
         _dropDownBal = new DropDownBal(_dropDownDal);
-        _roleContext = new RoleDbContext();
-        _roleDal = new RoleDal(connectionString, _roleContext);
+        _roleDal = new RoleDal(_context);
         _roleBal = new RoleBal(_roleDal);
         _employeeBal = new EmployeeBal(_employeeDal);
     }
@@ -144,7 +141,7 @@ public static class Program
             {
                 if (string.IsNullOrEmpty(options.Identifier) || item.Uid == options.Identifier)
                 {
-                    _console.ShowInfo(string.Format(Constants.EmployeeDetailsTemplate, item.Id, item.Uid, item.FirstName, item.LastName, item.DOB, item.EmailId, item.MobileNumber, item.JoiningDate, item.Location, item.Department, item.Role, item.Manager, item.Project));
+                    _console.ShowInfo(string.Format(Constants.EmployeeDetailsTemplate, item.Id, item.Uid, item.FirstName, item.LastName, item.Dob, item.EmailId, item.MobileNumber, item.JoiningDate, item.Location, item.Department, item.Role, item.Manager, item.Project));
                 }
             }
         }
@@ -162,7 +159,7 @@ public static class Program
         {
             foreach (var item in filteredEmployeeData)
             {
-                _console.ShowInfo(string.Format(Constants.EmployeeDetailsTemplate, item.Id, item.Uid, item.FirstName, item.LastName, item.DOB, item.EmailId, item.MobileNumber, item.JoiningDate, item.Location, item.Department, item.Role, item.Manager, item.Project));
+                _console.ShowInfo(string.Format(Constants.EmployeeDetailsTemplate, item.Id, item.Uid, item.FirstName, item.LastName, item.Dob, item.EmailId, item.MobileNumber, item.JoiningDate, item.Location, item.Department, item.Role, item.Manager, item.Project));
             }
         }
         else
@@ -173,7 +170,7 @@ public static class Program
 
     private static void HandleDeleteOperation(Options options)
     {
-        int res = _employeeBal.Delete(options.Identifier);
+        int res = _employeeBal.Delete(int.Parse(options.Identifier));
         if (res != -1)
         {
             _console.ShowSuccess(Constants.EmployeeDeletedSuccessMessage);
@@ -187,7 +184,7 @@ public static class Program
     private static void HandleUpdateOperation(Options options)
     {
         Employee employeeToUpdate = GetEmployeeInput();
-        int isUpdated = _employeeBal.Update(options.Identifier, employeeToUpdate);
+        int isUpdated = _employeeBal.Update(int.Parse(options.Identifier), employeeToUpdate);
         if (isUpdated != -1)
         {
             _console.ShowSuccess(string.Format(Constants.EmployeeUpdatedSuccessMessage, options.Identifier));
@@ -232,19 +229,18 @@ public static class Program
         employee.Uid = ReadValidInput("Enter Employee Number", s => string.IsNullOrEmpty(s) || Regex.IsMatch(s, @"^TZ\d{4}$"));
         employee.FirstName = ReadValidInput("First Name", s => !string.IsNullOrEmpty(s.Trim()));
         employee.LastName = ReadValidInput("Last Name", s => !string.IsNullOrEmpty(s.Trim()));
-        employee.DOB = ReadInput("Date Of Birth (y/m/d)");
+        employee.Dob = DateOnly.FromDateTime(DateTime.Parse(ReadInput("Date Of Birth (y/m/d)")));
 
         employee.EmailId = ReadValidInput("Email ID", s => string.IsNullOrWhiteSpace(s) || Regex.IsMatch(s, @"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$"));
 
         long mobileNumber;
         bool isValidMobile = long.TryParse(ReadValidInput("Mobile Number (10 digits)", s => string.IsNullOrWhiteSpace(s) || (long.TryParse(s, out mobileNumber) && s.Length == 10)), out mobileNumber);
         employee.MobileNumber = isValidMobile ? mobileNumber : 0;
+        employee.JoiningDate = DateOnly.FromDateTime(DateTime.Parse(ReadInput("Joining Date (y/m/d)")));
 
-        employee.JoiningDate = ReadInput("Joining Date (y/m/d)");
-
-        PrintOptions(_dropDownBal.GetLocationOptions());
+        PrintOptions(_dropDownBal.GetLocationOptions(),d => d.Name);
         employee.LocationId = _dropDownBal.GetLocationId(ReadInput("Location"));
-        PrintOptions(_dropDownBal.GetDepartmentOptions());
+        PrintOptions(_dropDownBal.GetDepartmentOptions(),d => d.Name);
         employee.DepartmentId = _dropDownBal.GetDepartmentId(ReadInput("Department"));
 
         List<string> rolesList = _roleBal.GetRoleNamesForDepartment((int)employee.DepartmentId);
@@ -266,7 +262,7 @@ public static class Program
         Console.WriteLine("\nAre you  a Manager? Y/N");
         string isManager = Console.ReadLine();
         employee.IsManager = isManager.Equals("Y", StringComparison.OrdinalIgnoreCase) ? true : false;
-        List<DropDown> managersList = _dropDownBal.GetManagerOptions();
+        List<Manager> managersList = _dropDownBal.GetManagerOptions();
         if (!employee.IsManager)
         {
             _console.ShowInfo("\nOptions");
@@ -277,7 +273,7 @@ public static class Program
             employee.ManagerId = _dropDownBal.GetManagerId(ReadInput("Manager"));
         }
 
-        PrintOptions(_dropDownBal.GetProjectOptions());
+        PrintOptions(_dropDownBal.GetProjectOptions(),d => d.Name);
         employee.ProjectId = _dropDownBal.GetProjectId(ReadInput("Project"));
         return employee;
     }
@@ -303,12 +299,12 @@ public static class Program
         return input;
     }
 
-    private static void PrintOptions(List<DropDown> dataList)
+    private static void PrintOptions<T>(List<T> dataList, Func<T, string> propertySelector)
     {
         Console.WriteLine("\nOptions:");
         foreach (var item in dataList)
         {
-            _console.ShowInfo(item.Name + "");
+            Console.WriteLine(propertySelector(item));
         }
     }
 

@@ -6,33 +6,29 @@ using Microsoft.Extensions.Configuration;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
-using EMS.Common;
+using EMS.DB;
 namespace EMS.DAL;
 
 public class DropDownDal : IDropDownDal
 {
-    private readonly string _connectionString;
-    private readonly DropDownDbContext _context;
-    private readonly EmployeeDbContext _employeeContext;
+    private readonly RahulContext _context;
 
-    public DropDownDal(string connectionString, DropDownDbContext context,EmployeeDbContext employeeDbContext)
+    public DropDownDal(RahulContext context)
     {
-        _connectionString = connectionString;
         _context = context;
-        _employeeContext = employeeDbContext;
     }
 
-    public List<DropDown> GetLocations()
+    public List<Location> GetLocations()
     {
-        return _context.Location.ToList() ?? null;
+        return _context.Locations.ToList() ?? null;
     }
 
-    public List<DropDown> GetDepartments()
+    public List<Department> GetDepartments()
     {
-        return _context.Department.ToList() ?? null;
+        return _context.Departments.ToList() ?? null;
     }
 
-    public List<DropDown> GetManagers()
+    public List<Manager> GetManagers()
     {
         // List<DropDown> empData = new List<DropDown>();
         // string sqlSelect = @"SELECT 
@@ -73,9 +69,9 @@ public class DropDownDal : IDropDownDal
         // return empData;
         try
         {
-            var managers = _employeeContext.Employees
+            var managers = _context.Employees
                 .Where(emp => emp.ManagerId == null)
-                .Select(emp => new DropDown
+                .Select(emp => new Manager
                 {
                     Id = emp.Id,
                     Name = emp.FirstName + " " + emp.LastName
@@ -91,8 +87,8 @@ public class DropDownDal : IDropDownDal
         }
     }
 
-    public List<DropDown> GetProjects()
+    public List<Project> GetProjects()
     {
-        return _context.Project.ToList() ?? null;
+        return _context.Projects.ToList() ?? null;
     }
 }

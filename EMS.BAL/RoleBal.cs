@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EMS.DAL;
+using EMS.DB;
 namespace EMS.BAL;
 
 public class RoleBal : IRoleBal

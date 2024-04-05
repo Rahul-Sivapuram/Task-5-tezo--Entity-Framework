@@ -2,57 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using EMS.Common;
+using EMS.DB;
 using Microsoft.EntityFrameworkCore;
 using System.Data.SqlClient;
 namespace EMS.DAL;
 
 public class RoleDal : IRoleDal
 {
-    private readonly string _connectionString;
-    private readonly RoleDbContext _context;
+    private readonly RahulContext _context;
 
-    public RoleDal(string connectionString, RoleDbContext context)
+    public RoleDal(RahulContext context)
     {
-        _connectionString = connectionString;
         _context = context;
     }
 
     public List<Role> GetAll()
     {
-        // List<Role> roles = new List<Role>();
-        // SqlConnection connection = new SqlConnection(_connectionString);
-        // try
-        // {
-        //     using (connection)
-        //     {
-        //         connection.Open();
-        //         string sqlSelect = @"select * from Role;";
-        //         using (SqlCommand command = new SqlCommand(sqlSelect, connection))
-        //         {
-        //             using (SqlDataReader reader = command.ExecuteReader())
-        //             {
-        //                 while (reader.Read())
-        //                 {
-        //                     Role role = new Role();
-        //                     role.Id = reader.GetInt32(0);
-        //                     role.Name = reader.GetString(1);
-        //                     role.DepartmentId = reader.GetInt32(2);
-        //                     roles.Add(role);
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-        // catch (Exception e)
-        // {
-        //     throw;
-        // }
-        // finally
-        // {
-        //     connection.Close();
-        // }
-        // return roles;
         try
         {
             var data = _context.Roles.ToList();
@@ -71,7 +36,7 @@ public class RoleDal : IRoleDal
         {
             _context.Roles.Add(role);
             _context.SaveChanges();
-            return role.Id ?? -1;
+            return role.Id;
         }
         catch (Exception ex)
         {

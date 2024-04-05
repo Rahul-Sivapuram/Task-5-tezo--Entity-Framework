@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using EMS.DAL;
+using EMS.DB;
 namespace EMS.BAL;
 
 public class DropDownBal : IDropDownBal
@@ -19,8 +20,9 @@ public class DropDownBal : IDropDownBal
 
     public int GetLocationId(string locationName)
     {
-        List<DropDown> items = _dropDownDal.GetLocations();
-        return GetId(items, locationName);
+        List<Location> items = _dropDownDal.GetLocations();
+        var item = items.FirstOrDefault(i => string.Equals(i.Name, locationName.ToUpper(), StringComparison.OrdinalIgnoreCase));
+        return item?.Id ?? -1;
     }
 
     public int GetManagerId(string managerName)
@@ -31,17 +33,19 @@ public class DropDownBal : IDropDownBal
 
     public int GetProjectId(string projectName)
     {
-        List<DropDown> items = _dropDownDal.GetProjects();
-        return GetId(items, projectName);
+        List<Project> items = _dropDownDal.GetProjects();
+        var item = items.FirstOrDefault(i => string.Equals(i.Name, projectName.ToUpper(), StringComparison.OrdinalIgnoreCase));
+        return item?.Id ?? -1;
     }
 
     public int GetDepartmentId(string departmentName)
     {
-        List<DropDown> departmentList = _dropDownDal.GetDepartments();
+        List<Department> departmentList = _dropDownDal.GetDepartments();
         bool ans = departmentList.Any(department => department.Name == departmentName.ToUpper());
         if (ans)
         {
-            return GetId(departmentList, departmentName);
+            var item = departmentList.FirstOrDefault(i => string.Equals(i.Name, departmentName.ToUpper(), StringComparison.OrdinalIgnoreCase));
+            return item?.Id ?? -1;
         }
         else
         {
@@ -49,40 +53,31 @@ public class DropDownBal : IDropDownBal
         }
     }
 
-    public DropDown GetLocationByName(string locationName)
+    public Location GetLocationByName(string locationName)
     {
-        List<DropDown> data = _dropDownDal.GetLocations();
-        return GetItemByName(data, locationName);
-    }
-
-    public DropDown GetDepartmentByName(string departmentName)
-    {
-        List<DropDown> data = _dropDownDal.GetDepartments();
-        return GetItemByName(data, departmentName);
-    }
-
-    public DropDown GetManagerByName(string managerName)
-    {
-        List<DropDown> data = _dropDownDal.GetManagers();
-        DropDown item = data.FirstOrDefault(item => managerName.Equals(item.Name, StringComparison.OrdinalIgnoreCase));
+        List<Location> data = _dropDownDal.GetLocations();
+        Location item = data.FirstOrDefault(item => locationName.ToUpper().Equals(item.Name, StringComparison.OrdinalIgnoreCase));
         return item;
     }
 
-    public DropDown GetProjectByName(string projectName)
+    public Department GetDepartmentByName(string departmentName)
     {
-        List<DropDown> data = _dropDownDal.GetProjects();
-        return GetItemByName(data, projectName);
+        List<Department> data = _dropDownDal.GetDepartments();
+        Department item = data.FirstOrDefault(item => departmentName.ToUpper().Equals(item.Name, StringComparison.OrdinalIgnoreCase));
+        return item;
     }
 
-    private int GetId(List<DropDown> items, string input)
+    public Manager GetManagerByName(string managerName)
     {
-        var item = items.FirstOrDefault(i => string.Equals(i.Name, input.ToUpper(), StringComparison.OrdinalIgnoreCase));
-        return item?.Id ?? -1;
+        List<Manager> data = _dropDownDal.GetManagers();
+        Manager item = data.FirstOrDefault(item => managerName.Equals(item.Name, StringComparison.OrdinalIgnoreCase));
+        return item;
     }
 
-    private DropDown GetItemByName(List<DropDown> data, string userInput)
+    public Project GetProjectByName(string projectName)
     {
-        DropDown item = data.FirstOrDefault(item => userInput.ToUpper().Equals(item.Name, StringComparison.OrdinalIgnoreCase));
+        List<Project> data = _dropDownDal.GetProjects();
+        Project item = data.FirstOrDefault(item => projectName.ToUpper().Equals(item.Name, StringComparison.OrdinalIgnoreCase));
         return item;
     }
 
@@ -99,7 +94,7 @@ public class DropDownBal : IDropDownBal
     }
 
     public string GetNameByManagerId(int id)
-    {   
+    {
         var manager = _dropDownDal.GetManagers().FirstOrDefault(x => x.Id == id);
         return manager != null ? manager.Name : null;
     }
@@ -110,22 +105,22 @@ public class DropDownBal : IDropDownBal
         return project != null ? project.Name : null;
     }
 
-    public List<DropDown> GetDepartmentOptions()
+    public List<Department> GetDepartmentOptions()
     {
         return _dropDownDal.GetDepartments();
     }
 
-    public List<DropDown> GetLocationOptions()
+    public List<Location> GetLocationOptions()
     {
         return _dropDownDal.GetLocations();
     }
 
-    public List<DropDown> GetManagerOptions()
-    {   
+    public List<Manager> GetManagerOptions()
+    {
         return _dropDownDal.GetManagers();
     }
 
-    public List<DropDown> GetProjectOptions()
+    public List<Project> GetProjectOptions()
     {
         return _dropDownDal.GetProjects();
     }

@@ -4,19 +4,16 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
-using EMS.Common;
+using EMS.DB;
 using Microsoft.EntityFrameworkCore;
-
 namespace EMS.DAL;
 
 public class EmployeeDal : IEmployeeDal
 {
-    private readonly string _connectionString;
-    private readonly EmployeeDbContext _context;
+    private readonly RahulContext _context;
 
-    public EmployeeDal(string connectionString, EmployeeDbContext context)
+    public EmployeeDal(RahulContext context)
     {
-        _connectionString = connectionString;
         _context = context;
     }
 
@@ -40,7 +37,7 @@ public class EmployeeDal : IEmployeeDal
         {
             _context.Employees.Add(employee);
             _context.SaveChanges();
-            return employee.Id ?? -1;
+            return employee.Id;
         }
         catch (Exception ex)
         {
@@ -48,14 +45,13 @@ public class EmployeeDal : IEmployeeDal
         }
     }
 
-    public int Update(string employeeNumber, Employee employee)
+    public int Update(int employeeId, Employee employee)
     {
         try
         {
-            var existingEmp = _context.Employees.Find(employeeNumber);
+            var existingEmp = _context.Employees.Find(employeeId);
             if (existingEmp != null)
             {
-                existingEmp.Id = employee.Id;
                 existingEmp.FirstName = employee.FirstName;
                 existingEmp.LastName = employee.LastName;
                 existingEmp.EmailId = employee.EmailId;
@@ -69,7 +65,7 @@ public class EmployeeDal : IEmployeeDal
                 existingEmp.ProjectId = employee.ProjectId;
                 _context.SaveChanges();
             }
-            return existingEmp.Id ?? -1;
+            return existingEmp.Id;
         }
         catch (Exception ex)
         {
@@ -78,7 +74,7 @@ public class EmployeeDal : IEmployeeDal
         }
     }
 
-    public int Delete(string employeeId)
+    public int Delete(int employeeId)
     {
         try
         {
@@ -86,6 +82,7 @@ public class EmployeeDal : IEmployeeDal
             var employee = _context.Employees.Find(employeeId);
             if (employee != null)
             {
+                Console.WriteLine("yes");
                 _context.Employees.Remove(employee);
                 rows = _context.SaveChanges();
             }
@@ -100,56 +97,9 @@ public class EmployeeDal : IEmployeeDal
 
     public List<EmployeeDetail> Filter(EmployeeFilter? employee)
     {
-        // var sqlSelect = @"SELECT 
-        // emp.Id, emp.Uid, emp.FirstName, emp.LastName, CONVERT(varchar(10),emp.Dob,23) as DOB, emp.EmailId, emp.MobileNumber,CONVERT(varchar(10),emp.JoiningDate,23) as JoiningDate, 
-        // Location.Name as Location, 
-        // Roles.Name as Role, 
-        // Department.Name as Department,
-        // CONCAT(manager.FirstName, ' ', manager.LastName) as Manager,
-        // Project.Name as Project  
-        // FROM 
-        //     Employee as emp
-        // LEFT JOIN Employee as manager ON emp.ManagerId = manager.Id
-        // JOIN Location ON emp.LocationId = Location.Id
-        // JOIN Roles ON emp.RoleId = Roles.Id
-        // JOIN Department ON emp.DepartmentId = Department.Id
-        // JOIN Project ON emp.ProjectId = Project.Id";
-
-        // var conditions = new List<string>();
-
-        // if (employee != null)
-        // {
-        //     if (!string.IsNullOrEmpty(employee.EmployeeName))
-        //         conditions.Add($"emp.FirstName LIKE '{employee.EmployeeName}%'");
-
-        //     if (employee.Location != null)
-        //         conditions.Add($"Location.Name = '{employee.Location.Name}'");
-
-        //     if (employee.JobTitle != null)
-        //         conditions.Add($"Roles.Name = '{employee.JobTitle.Name}'");
-
-        //     if (employee.Manager != null)
-        //         conditions.Add($"(manager.FirstName + ' ' + manager.LastName) = '{employee.Manager.Name}'");
-
-        //     if (employee.Project != null)
-        //         conditions.Add($"Project.Name = '{employee.Project.Name}'");
-        // }
-
-        // if (conditions.Any())
-        //     sqlSelect += " WHERE " + string.Join(" AND ", conditions);
-        // try
-        // {
-        //     var filteredEmployees = _context.EmployeeDetails.FromSqlRaw(sqlSelect).ToList();
-        //     return filteredEmployees;
-        // }
-        // catch (Exception ex)
-        // {
-        //     return null;
-        // }
         try
         {
             var query = _context.EmployeeDetails.AsQueryable();
-
             if (employee != null)
             {
                 if (!string.IsNullOrEmpty(employee.EmployeeName))
@@ -173,8 +123,6 @@ public class EmployeeDal : IEmployeeDal
         }
         catch (Exception ex)
         {
-            // Handle the exception
-            Console.WriteLine(ex.Message);
             return null;
         }
     }

@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using EMS.DAL;
+using EMS.DB;
 namespace EMS.BAL;
 
 public class EmployeeBal : IEmployeeBal
@@ -21,14 +22,14 @@ public class EmployeeBal : IEmployeeBal
         return _employeeDal.Insert(employee);
     }
 
-    public int Delete(string employeeNumber)
+    public int Delete(int employeeId)
     {
-        return _employeeDal.Delete(employeeNumber);
+        return _employeeDal.Delete(employeeId);
     }
 
-    public int Update(string employeeNumber, Employee employee)
+    public int Update(int employeeId, Employee employee)
     {
-        int res = _employeeDal.Update(employeeNumber, employee);
+        int res = _employeeDal.Update(employeeId, employee);
         return res;
     }
 
